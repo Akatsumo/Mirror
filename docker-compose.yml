@@ -1,0 +1,59 @@
+# Bot + MongoDB + aria2 + qBittorrent; SABnzbd and JDownloader via profiles:
+#   docker compose up -d                       (core)
+#   docker compose --profile usenet --profile jd up -d
+# Every engine mounts ./downloads at /app/downloads so paths match across containers.
+x-downloads: &downloads ./downloads:/app/downloads
+
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: mongodb://mongo:27017
+      ARIA2_HOST: http://aria2
+      QBIT_HOST: http://qbittorrent:8090
+      SABNZBD_HOST: http://sabnzbd:8080
+    volumes: [*downloads, ./data:/app/data]
+    ports: ["${RCLONE_SERVE_PORT:-8080}:${RCLONE_SERVE_PORT:-8080}"]
+    depends_on: [mongo, aria2, qbittorrent]
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes: [mongo:/data/db]
+
+  aria2:
+    image: p3terx/aria2-pro
+    restart: unless-stopped
+    environment:
+      RPC_SECRET: ${ARIA2_SECRET:-}
+      RPC_PORT: 6800
+      LISTEN_PORT: 6888
+    volumes: [*downloads, aria2:/config]
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    restart: unless-stopped
+    environment: {WEBUI_PORT: 8090, PUID: 0, PGID: 0}
+    volumes: [*downloads, qbit:/config]
+    ports: ["6881:6881", "6881:6881/udp"]
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    profiles: [usenet]
+    restart: unless-stopped
+    environment: {PUID: 0, PGID: 0}
+    volumes: [*downloads, sabnzbd:/config]
+
+  jdownloader:
+    image: jlesage/jdownloader-2
+    profiles: [jd]
+    restart: unless-stopped
+    environment:
+      MYJDOWNLOADER_EMAIL: ${JD_EMAIL:-}
+      MYJDOWNLOADER_PASSWORD: ${JD_PASS:-}
+      MYJDOWNLOADER_DEVICE_NAME: ${JD_DEVICE:-mirror}
+    volumes: [*downloads, jd:/config]
+
+volumes: {mongo: {}, aria2: {}, qbit: {}, sabnzbd: {}, jd: {}}

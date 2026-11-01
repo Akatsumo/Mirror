@@ -2,8 +2,12 @@ __pycache__/
 *.py[cod]
 .venv/
 .env
+config.env
 *.session
 *.session-journal
 downloads/
+data/
+log.txt*
+.restart
 .pytest_cache/
 .ruff_cache/
