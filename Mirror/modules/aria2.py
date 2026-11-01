@@ -35,6 +35,7 @@ async def global_options() -> dict[str, str]:
 async def set_global_option(key: str, value: str) -> None:
     await asyncio.to_thread(api().client.change_global_option, {key: value})
 
+
 def _options(task: Task) -> dict[str, str]:
     args = task.args
     opts = {"dir": str(task.dir), "seed-time": "0", "follow-torrent": "mem", "bt-remove-unselected-file": "true"}

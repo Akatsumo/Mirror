@@ -62,6 +62,7 @@ async def delete(*messages: Message | None) -> None:
             with contextlib.suppress(RPCError):
                 await message.delete()
 
+
 def mention(user_id: int, name: str = "") -> str:
     return f'<a href="tg://user?id={user_id}">{escape(name or str(user_id))}</a>'
 

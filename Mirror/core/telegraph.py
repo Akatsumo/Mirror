@@ -44,6 +44,7 @@ class _Nodes(HTMLParser):
         if data:
             self._append(data)
 
+
 def html_to_nodes(html: str) -> list[Any]:
     parser = _Nodes()
     parser.feed(html)
